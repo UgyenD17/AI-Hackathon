@@ -7,15 +7,15 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 # Path to the video file
-video_path = "/Users/ut/downloads/IMG_9905.MOV"  # Replace with your video file path
+video_path = "/Users/ut/Desktop/IMG_3267.MOV"
 
 # Constants for punch and kick detection
 GOOD_PUNCH_ELBOW = 180      
-GOOD_SHOULDER_ANGLE = 90    
+GOOD_SHOULDER_ANGLE = 70    
 GOOD_KICK_KNEE_ANGLE_MIN = 50  
 GOOD_KICK_KNEE_ANGLE_MAX = 150  
-ANGLE_TOLERANCE = 50        
-KICK_DEVIATION = 15         
+ANGLE_TOLERANCE = 30        
+KICK_DEVIATION = 30         
 
 # Idle time threshold (in seconds)
 IDLE_THRESHOLD = 2.0  
@@ -34,7 +34,7 @@ def calculate_angle(a, b, c):
     return angle
 
 # Setup Mediapipe Pose instance
-cap = cv2.VideoCapture(0)  # Open the webcam (or replace 0 with video_path for video file)
+cap = cv2.VideoCapture(0)  # Open the video file
 
 # Time tracking for idle state
 last_move_time = cv2.getTickCount()  
@@ -51,6 +51,11 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         if not ret:
             break
         
+        # Rotate frame if width > height (i.e., video is horizontal)
+        frame_height, frame_width = frame.shape[:2]
+        # if frame_width > frame_height:
+        #     frame = cv2.rotate(frame, cv2.ROTATE__COUNTERCLOCKWISE)
+
         # Recolor image to RGB
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
@@ -160,10 +165,10 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                 kick_type = "Bad Kick"
 
             # Display punch and kick types
-            cv2.putText(image, f"{punch_type}", (50, 150), 
+            cv2.putText(image, f"{punch_type}", (50, 200), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0) if "Good" in punch_type else (0, 0, 255), 
                         2, cv2.LINE_AA)
-            cv2.putText(image, f"{kick_type}", (50, 200), 
+            cv2.putText(image, f"{kick_type}", (50, 250), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0) if "Good" in kick_type else (0, 0, 255), 
                         2, cv2.LINE_AA)
 
@@ -178,13 +183,14 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         
         # Render landmarks
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                  mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2), 
-                                  mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2))
+                                  mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=4, circle_radius=8), 
+                                  mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=4, circle_radius=8))
         
         # Show image
         cv2.imshow('Pose Detection', image)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        # SLOW MOTION EFFECT: wait 50 ms per frame (instead of 1 ms)
+        if cv2.waitKey(50) & 0xFF == ord('q'):
             break
 
 cap.release()
